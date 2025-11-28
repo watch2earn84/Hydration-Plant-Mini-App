@@ -1,0 +1,111 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background: #e0f7fa;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 40px;
+}
+
+.container {
+  background: #ffffffdd;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  text-align: center;
+  width: 320px;
+}
+
+h1 {
+  color: #00796b;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: #00bfa5;
+  color: white;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #00796b;
+}
+
+#plantContainer {
+  position: relative;
+  height: 180px;
+  margin: 20px auto;
+  width: 120px;
+}
+
+#plant {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  background: #a5d6a7; /* initial plant color */
+  border-radius: 50%;
+  transition: all 0.5s ease;
+}
+
+.plant-stage-0 { background: #a5d6a7; height: 60px; }
+.plant-stage-1 { background: #81c784; height: 80px; }
+.plant-stage-2 { background: #66bb6a; height: 100px; }
+.plant-stage-3 { background: #4caf50; height: 120px; }
+.plant-stage-4 { background: #388e3c; height: 140px; }
+
+#waterDropContainer {
+  position: absolute;
+  top: -20px;
+  left: 10px;
+  width: 100px;
+  height: 160px;
+  pointer-events: none;
+}
+
+.water-drop {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #2196f3;
+  border-radius: 50%;
+  animation: drop 1.5s linear forwards;
+}
+
+@keyframes drop {
+  0% { transform: translateY(0); opacity: 1; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(140px); opacity: 0; }
+}
+
+/* Loading Indicator */
+#loadingIndicator {
+  font-size: 16px;
+  color: #1e88e5;
+  font-weight: bold;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Confetti / particles for stage 4 */
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: fly 0.9s linear forwards;
+}
+
+@keyframes fly {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-80px) translateX(var(--tx)); opacity: 0; }
+}

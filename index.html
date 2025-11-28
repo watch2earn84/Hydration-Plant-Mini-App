@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydration Plant Mini App</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+  <div id="app" class="container">
+    <h1>💧 Hydration Plant Mini App 💧</h1>
+
+    <!-- Wallet -->
+    <div id="walletDiv">
+      <button id="connectWallet">Connect Wallet</button>
+      <span id="walletAddress"></span>
+    </div>
+
+    <!-- Stats -->
+    <div>Water Count: <span id="waterCount">0</span></div>
+    <div>Stage: <span id="stage">0</span></div>
+
+    <!-- Plant -->
+    <div id="plantContainer">
+      <div id="plant" class="plant-stage-0"></div>
+      <div id="waterDropContainer"></div>
+    </div>
+
+    <!-- Water Button -->
+    <button id="waterButton">I drank water 💧</button>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" style="display:none; margin-top:10px;">
+      <span>💧 Updating plant...</span>
+    </div>
+  </div>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
