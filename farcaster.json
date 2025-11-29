@@ -6,6 +6,8 @@
   "miniapp": {
     "version": "1",
     "name": "Hydration Plant Mini App",
+      "entry": "/index.html", 
+
     "homeUrl": "https://hydration-plant-mini-app.vercel.app",
     "iconUrl": "https://hydration-plant-mini-app.vercel.app/icon.png",
     "subtitle": "Grow your plant by staying hydrated!",
@@ -20,3 +22,4 @@
     "noindex": true
   }
 }
+
