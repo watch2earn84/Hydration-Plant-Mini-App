@@ -1,0 +1,68 @@
+{
+  "accountAssociation": {},
+  "miniapp": {
+    "id": "hydration-plant-mini-app",
+    "name": "Hydration Plant Mini App",
+    "description": "A fun hydration tracker where your plant grows as you drink water.",
+    "author": "Zia Ullah",
+    "version": "1.0.0",
+    "entry": "/index.html",
+    "icon": "/icon.png",
+    "categories": ["health", "lifestyle", "fun"],
+    "screenshots": [
+      { "src": "/screenshot1.png", "label": "Home screen" },
+      { "src": "/screenshot2.png", "label": "Hydration progress" }
+    ],
+    "app": {
+      "name": "Hydration Plant",
+      "short_description": "Grow your plant by staying hydrated!",
+      "long_description": "Track your daily water intake and grow your virtual plant on Base. Lightweight, fast and easy to use."
+    },
+    "support": {
+      "email": "support@example.com",
+      "website": "https://hydration-plant-mini-app.vercel.app"
+    }
+  },
+  "baseBuilder": {
+    "ownerAddress": "0xEf6C5420936d60805921F05E11DE1973A9ccE3C3"
+  }
+{
+  "id": "hydration-plant-mini-app",
+  "name": "Hydration Plant Mini App",
+  "description": "A fun hydration tracker where your plant grows as you drink water.",
+  "author": "Zia Ullah",
+  "version": "1.0.0",
+  "entry": "/index.html",
+  "icon": "/icon.png",
+  "categories": ["health", "lifestyle", "fun"],
+  "screenshots": [
+    {
+      "src": "/screenshot1.png",
+      "label": "Home screen"
+    },
+    {
+      "src": "/screenshot2.png",
+      "label": "Hydration progress"
+    }
+  ],
+  "app": {
+    "name": "Hydration Plant",
+    "short_description": "Grow your plant by staying hydrated!",
+    "long_description": "Track your daily water intake and grow your virtual plant on Base. Lightweight, fast and easy to use.",
+    "permissions": ["read:user", "read:hydration", "write:hydration"]
+  },
+  "support": {
+    "email": "support@example.com",
+    "website": "https://hydration-plant-mini-app.vercel.app"
+  },
+  "platform": {
+    "os": ["web", "mobile"],
+    "min_version": "1.0.0"
+  },
+  "tags": ["hydration", "plant", "tracker", "fun"],
+  "privacy": {
+    "data_collected": ["hydration_data", "usage_metrics"],
+    "data_usage": "Used to track hydration progress and improve user experience.",
+    "third_party_sharing": "None"
+  }
+}
