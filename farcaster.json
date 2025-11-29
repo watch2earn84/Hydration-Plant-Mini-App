@@ -1,0 +1,28 @@
+{
+  "accountAssociation": {},
+  "baseBuilder": {
+    "ownerAddress": "0xEf6C5420936d60805921F05E11DE1973A9ccE3C3"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Hydration Plant Mini App",
+    "homeUrl": "https://hydration-plant-mini-app.vercel.app",
+    "iconUrl": "https://hydration-plant-mini-app.vercel.app/icon.png",
+    "splashImageUrl": "https://hydration-plant-mini-app.vercel.app/splash.png",
+    "splashBackgroundColor": "#a0d468",
+    "subtitle": "Grow your plant by staying hydrated!",
+    "description": "Track your daily water intake and watch your virtual plant grow as you stay hydrated.",
+    "screenshotUrls": [
+      "https://hydration-plant-mini-app.vercel.app/screenshot1.png",
+      "https://hydration-plant-mini-app.vercel.app/screenshot2.png"
+    ],
+    "primaryCategory": "health",
+    "tags": ["health", "lifestyle", "hydration", "fun"],
+    "heroImageUrl": "https://hydration-plant-mini-app.vercel.app/og.png",
+    "tagline": "Drink water, grow your plant",
+    "ogTitle": "Hydration Plant Mini App",
+    "ogDescription": "Track hydration and grow a virtual plant with this fun mini app.",
+    "ogImageUrl": "https://hydration-plant-mini-app.vercel.app/og.png",
+    "noindex": true
+  }
+}
