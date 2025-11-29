@@ -2,6 +2,10 @@
 // Hydration Plant Mini App
 // ------------------------
 
+// IMPORTS (browser-friendly ESM CDNs)
+import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
+import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js";
+
 // Contract address
 const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
 
@@ -33,8 +37,10 @@ async function connectWallet(){
     currentAccount = await signer.getAddress();
     contract = new ethers.Contract(CONTRACT_ADDRESS, HydrationPlantABI, signer);
 
-    document.getElementById("walletAddress").innerText = currentAccount.slice(0,6) + "..." + currentAccount.slice(-4);
-    document.getElementById("connectWallet").disabled = true;
+    const addrEl = document.getElementById("walletAddress");
+    if (addrEl) addrEl.innerText = currentAccount.slice(0,6) + "..." + currentAccount.slice(-4);
+    const cwBtn = document.getElementById("connectWallet");
+    if (cwBtn) cwBtn.disabled = true;
 
     await fetchData();
   } catch(e){ console.error(e); alert("Wallet connect failed: "+(e.message||e)); }
@@ -42,7 +48,8 @@ async function connectWallet(){
 
 // Show / hide loading
 function showLoading(show = true){
-  document.getElementById("loadingIndicator").style.display = show ? "block" : "none";
+  const el = document.getElementById("loadingIndicator");
+  if (el) el.style.display = show ? "block" : "none";
 }
 
 // Fetch data from chain and update UI
@@ -56,8 +63,10 @@ async function fetchData() {
     stage = Number(stage);
     stage = Math.min(stage, MAX_STAGE);
 
-    document.getElementById("waterCount").innerText = wc;
-    document.getElementById("stage").innerText = stage;
+    const wcEl = document.getElementById("waterCount");
+    if (wcEl) wcEl.innerText = wc;
+    const stageEl = document.getElementById("stage");
+    if (stageEl) stageEl.innerText = stage;
 
     const plant = document.getElementById("plant");
     if (plant) {
@@ -74,6 +83,7 @@ async function fetchData() {
 // Spawn water drops
 function spawnDrops(){
   const container = document.getElementById("waterDropContainer");
+  if (!container) return;
   for(let i=0;i<3;i++){
     const drop = document.createElement("div");
     drop.className = "water-drop";
@@ -89,6 +99,7 @@ function spawnDrops(){
 // Confetti particles
 function spawnParticles(){
   const container = document.getElementById("plantContainer");
+  if (!container) return;
   const colors = ["#ff7a7a","#ffd166","#7afcff","#b39ddb","#86efac"];
   for(let i=0;i<14;i++){
     const p = document.createElement("div");
@@ -124,8 +135,10 @@ async function waterPlant(){
     if(stage >= MAX_STAGE){
       spawnParticles();
       const plant = document.getElementById("plant");
-      plant.style.transform = "scale(1.04)";
-      setTimeout(()=>{ plant.style.transform = "scale(1)"; }, 480);
+      if (plant) {
+        plant.style.transform = "scale(1.04)";
+        setTimeout(()=>{ plant.style.transform = "scale(1)"; }, 480);
+      }
     }
 
     // Hide loading
@@ -138,14 +151,55 @@ async function waterPlant(){
   }
 }
 
-// Init on load
-window.addEventListener("load", ()=>{
-  const plantContainer = document.getElementById("plantContainer");
-  const bloom = document.createElement("div");
-  bloom.className = "bloom";
-  bloom.innerHTML = '<div class="petal p1"></div><div class="petal p2"></div><div class="center"></div>';
-  plantContainer.appendChild(bloom);
+// Init on load — wait for Farcaster/Base SDK to be ready first
+window.addEventListener("load", async ()=>{
+  try {
+    console.log("Waiting for Farcaster/Base SDK to be ready...");
+    await sdk.actions.ready();
+    console.log("Farcaster SDK ready.");
 
-  document.getElementById("connectWallet").addEventListener("click", connectWallet);
-  document.getElementById("waterButton").addEventListener("click", waterPlant);
+    // create bloom element if not present
+    const plantContainer = document.getElementById("plantContainer");
+    if (plantContainer) {
+      const existing = plantContainer.querySelector(".bloom");
+      if (!existing) {
+        const bloom = document.createElement("div");
+        bloom.className = "bloom";
+        bloom.innerHTML = '<div class="petal p1"></div><div class="petal p2"></div><div class="center"></div>';
+        plantContainer.appendChild(bloom);
+      }
+    }
+
+    // attach event listeners
+    const cwBtn = document.getElementById("connectWallet");
+    if (cwBtn) cwBtn.addEventListener("click", connectWallet);
+    const waterBtn = document.getElementById("waterButton");
+    if (waterBtn) waterBtn.addEventListener("click", waterPlant);
+
+    // Optionally try to connect silently if a provider already exists
+    if (window.ethereum) {
+      try {
+        ensureProvider();
+        const accounts = await provider.listAccounts();
+        if (accounts && accounts.length > 0) {
+          signer = provider.getSigner();
+          currentAccount = await signer.getAddress();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, HydrationPlantABI, signer);
+          document.getElementById("walletAddress").innerText = currentAccount.slice(0,6) + "..." + currentAccount.slice(-4);
+          document.getElementById("connectWallet").disabled = true;
+          await fetchData();
+        }
+      } catch(err){
+        console.log("Silent connect check failed (ok):", err);
+      }
+    }
+
+  } catch(e){
+    console.error("SDK ready failed:", e);
+    // still attach events so user can try manually
+    const cwBtn = document.getElementById("connectWallet");
+    if (cwBtn) cwBtn.addEventListener("click", connectWallet);
+    const waterBtn = document.getElementById("waterButton");
+    if (waterBtn) waterBtn.addEventListener("click", waterPlant);
+  }
 });
