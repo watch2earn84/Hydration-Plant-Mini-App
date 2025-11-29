@@ -11,10 +11,6 @@
     "iconUrl": "https://hydration-plant-mini-app.vercel.app/icon.png",
     "subtitle": "Grow your plant by staying hydrated!",
     "description": "Track your daily water intake and watch your virtual plant grow as you stay hydrated.",
-    "screenshotUrls": [
-      "https://hydration-plant-mini-app.vercel.app/screenshot1.png",
-      "https://hydration-plant-mini-app.vercel.app/screenshot2.png"
-    ],
     "primaryCategory": "health",
     "tags": ["health", "lifestyle", "hydration", "fun"],
     "tagline": "Drink water, grow your plant",
