@@ -3,7 +3,7 @@
 // =========================
 
 // --- CONFIG ---
-const CONTRACT_ADDRESS = "0x091E8CdA6AA9DFb468258B788f9204147989B4Bb";
+const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
 const BUILDER_CODE = "bc_gfrlgx8t";
 
 // --- ABI ---
