@@ -1,5 +1,5 @@
 // =========================
-// Hydration Plant Mini App (BASE OFFICIAL FIX)
+// Hydration Plant Mini App (FINAL STABLE FIX)
 // =========================
 
 // ------------------------
@@ -34,7 +34,7 @@ const MAX_WATER = 12;
 // ------------------------
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("MetaMask required");
+    alert("MetaMask not found");
     throw new Error("No wallet");
   }
 
@@ -69,7 +69,7 @@ async function connectWallet() {
 
   } catch (err) {
     console.error(err);
-    alert(err.message);
+    alert("Wallet connection failed: " + err.message);
   }
 }
 
@@ -115,7 +115,19 @@ function spawnParticles() {
 }
 
 // ------------------------
-// 🚀 WATER FUNCTION (OFFICIAL BASE ATTRIBUTION FIX)
+// 🔥 SAFE BUILDER ENCODING (NO viem dataSuffix OBJECT)
+// ------------------------
+function encodeBuilderCode(code) {
+  return (
+    "0x" +
+    Array.from(code)
+      .map(c => c.charCodeAt(0).toString(16))
+      .join("")
+  );
+}
+
+// ------------------------
+// 🚀 WATER FUNCTION (FIXED FOR VIEM ERROR)
 // ------------------------
 async function waterPlant() {
   if (!currentAccount) {
@@ -126,23 +138,18 @@ async function waterPlant() {
   try {
     spawnDrops();
 
-    // switch to Base
+    // switch Base chain
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: "0x2105" }],
     });
 
-    // ------------------------
-    // IMPORT VIEM
-    // ------------------------
+    // import viem safely
     const { createWalletClient, custom, encodeFunctionData } =
       await import("https://esm.sh/viem@2.45.0");
     const { base } =
       await import("https://esm.sh/viem@2.45.0/chains");
 
-    // ------------------------
-    // OFFICIAL SAFE BUILDER ENCODING (NO MANUAL HEX)
-    // ------------------------
     const walletClient = createWalletClient({
       chain: base,
       transport: custom(window.ethereum),
@@ -150,6 +157,7 @@ async function waterPlant() {
 
     const [address] = await walletClient.getAddresses();
 
+    // encode function call
     const data = encodeFunctionData({
       abi: [
         {
@@ -163,16 +171,10 @@ async function waterPlant() {
       functionName: "water",
     });
 
-    // ------------------------
-    // IMPORTANT: USE dataSuffix PROPERLY (BASE EXPECTED FORMAT)
-    // ------------------------
-    const dataSuffix = {
-      codes: [BUILDER_CODE],
-    };
+    // ✔ FIXED: builder code as STRING (NO OBJECTS)
+    const dataSuffix = encodeBuilderCode(BUILDER_CODE);
 
-    // ------------------------
-    // SEND TRANSACTION (BASE COMPLIANT PATH)
-    // ------------------------
+    // send transaction
     const hash = await walletClient.sendTransaction({
       account: address,
       to: CONTRACT_ADDRESS,
@@ -182,6 +184,7 @@ async function waterPlant() {
 
     console.log("TX:", hash);
 
+    // wait confirmation
     await provider.waitForTransaction(hash);
 
     await fetchData();
