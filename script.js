@@ -1,9 +1,9 @@
 // =========================
-// Hydration Plant Mini App (FINAL FIXED)
+// Hydration Plant Mini App (FINAL STABLE VERSION)
 // =========================
 
 // ------------------------
-// CONTRACT
+// CONTRACT CONFIG
 // ------------------------
 const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
 const BUILDER_CODE = "bc_gfrlgx8t";
@@ -18,7 +18,7 @@ const HydrationPlantABI = [
 ];
 
 // ------------------------
-// GLOBALS
+// GLOBALS (Ethers - read only)
 // ------------------------
 let provider;
 let signer;
@@ -30,11 +30,11 @@ const MAX_STAGE = 4;
 const MAX_WATER = 12;
 
 // ------------------------
-// PROVIDER
+// PROVIDER SETUP
 // ------------------------
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("Please install MetaMask!");
+    alert("Please install MetaMask");
     throw new Error("No wallet found");
   }
 
@@ -69,12 +69,12 @@ async function connectWallet() {
 
   } catch (err) {
     console.error(err);
-    alert("Wallet connection failed");
+    alert("Wallet connection failed: " + err.message);
   }
 }
 
 // ------------------------
-// FETCH DATA
+// FETCH ONCHAIN DATA
 // ------------------------
 async function fetchData() {
   if (!contractRead || !currentAccount) return;
@@ -90,7 +90,7 @@ async function fetchData() {
 }
 
 // ------------------------
-// VISUALS
+// UI EFFECTS
 // ------------------------
 function spawnDrops() {
   const container = document.getElementById("waterDropContainer");
@@ -99,7 +99,6 @@ function spawnDrops() {
     const drop = document.createElement("div");
     drop.className = "water-drop";
     container.appendChild(drop);
-
     setTimeout(() => drop.remove(), 1000);
   }
 }
@@ -111,13 +110,12 @@ function spawnParticles() {
     const p = document.createElement("div");
     p.className = "particle";
     container.appendChild(p);
-
     setTimeout(() => p.remove(), 900);
   }
 }
 
 // ------------------------
-// 🚀 WATER FUNCTION (WITH BUILDER CODE)
+// 🚀 WATER FUNCTION (FIXED + BUILDER CODE)
 // ------------------------
 async function waterPlant() {
   if (!currentAccount) {
@@ -128,11 +126,18 @@ async function waterPlant() {
   try {
     spawnDrops();
 
-    // Import viem dynamically (safe for browser)
+    // 1. FORCE BASE CHAIN
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0x2105" }], // Base mainnet
+    });
+
+    // 2. Load Viem dynamically (safe browser usage)
     const { createWalletClient, custom } = await import("https://esm.sh/viem@2.45.0");
     const { base } = await import("https://esm.sh/viem@2.45.0/chains");
     const { Attribution } = await import("https://esm.sh/ox@0.1.0/erc8021");
 
+    // 3. Create wallet client with Builder Code
     const walletClient = createWalletClient({
       chain: base,
       transport: custom(window.ethereum),
@@ -141,22 +146,26 @@ async function waterPlant() {
       }),
     });
 
+    const [address] = await walletClient.getAddresses();
+
+    // 4. Send transaction
     const hash = await walletClient.writeContract({
       address: CONTRACT_ADDRESS,
       abi: HydrationPlantABI,
       functionName: "water",
-      account: currentAccount,
+      account: address,
     });
 
-    console.log("TX:", hash);
+    console.log("TX HASH:", hash);
 
+    // 5. Wait confirmation (Ethers read-only provider)
     const receipt = await provider.waitForTransaction(hash);
 
     if (receipt.status === 0) {
-      alert("Transaction failed");
-      return;
+      throw new Error("Transaction reverted");
     }
 
+    // 6. Refresh UI
     await fetchData();
 
     const stage = Number(document.getElementById("stage").innerText);
@@ -167,8 +176,8 @@ async function waterPlant() {
     }
 
   } catch (err) {
-    console.error(err);
-    alert("Transaction error");
+    console.error("WATER ERROR:", err);
+    alert(err.shortMessage || err.message || "Transaction failed");
   }
 }
 
@@ -183,6 +192,6 @@ window.addEventListener("load", () => {
   bloom.innerHTML = '<div class="petal p1"></div><div class="petal p2"></div><div class="center"></div>';
   plantContainer.appendChild(bloom);
 
-  document.getElementById("connectWallet").addEventListener("click", connectWallet);
-  document.getElementById("waterButton").addEventListener("click", waterPlant);
+  document.getElementById("connectWallet").onclick = connectWallet;
+  document.getElementById("waterButton").onclick = waterPlant;
 });
