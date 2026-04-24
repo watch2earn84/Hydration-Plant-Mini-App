@@ -1,171 +1,170 @@
-// ------------------------
-// Hydration Plant Mini App
-// ------------------------
+// =========================
+// script.js (FINAL VERSION)
+// =========================
 
-// Contract address
-const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
+// --- CONFIG ---
+const CONTRACT_ADDRESS = "0x091E8CdA6AA9DFb468258B788f9204147989B4Bb";
+const BUILDER_CODE = "bc_gfrlgx8t";
 
-// Minimal ABI
+// --- ABI ---
 const HydrationPlantABI = [
-  {"inputs":[],"name":"water","outputs":[],"stateMutability":"nonpayable","type":"function"},
-  {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getWaterCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"stageOf","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"}
+  { "inputs": [], "name": "water", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "internalType": "address", "name": "user", "type": "address" }], "name": "getWaterCount", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "internalType": "address", "name": "user", "type": "address" }], "name": "stageOf", "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }], "stateMutability": "view", "type": "function" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "user", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "newCount", "type": "uint256" }, { "indexed": false, "internalType": "uint8", "name": "newStage", "type": "uint8" }], "name": "Watered", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": true, "internalType": "uint256", "name": "tokenId", "type": "uint256" }], "name": "Transfer", "type": "event" }
 ];
 
-let provider;
-let signer;
-let contract;
-let currentAccount;
-
+// --- GLOBALS ---
+let provider = null;
+let signer = null;
+let contract = null;
+let contractRead = null;
+let currentAccount = null;
 const MAX_STAGE = 4;
-const MAX_WATER = 12;
 
-// Ensure provider
+// --- PROVIDER ---
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("Please install MetaMask!");
-    throw new Error("No metamask");
+    alert("Install MetaMask");
+    throw new Error("No provider");
   }
   if (!provider) provider = new ethers.providers.Web3Provider(window.ethereum);
+  if (!contractRead) contractRead = new ethers.Contract(CONTRACT_ADDRESS, HydrationPlantABI, provider);
 }
 
-// Connect wallet
-async function connectWallet(){
-  try {
-    ensureProvider();
+// --- SIGNER ---
+async function ensureSigner() {
+  ensureProvider();
+  if (!signer) {
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
     currentAccount = await signer.getAddress();
     contract = new ethers.Contract(CONTRACT_ADDRESS, HydrationPlantABI, signer);
-
-    document.getElementById("walletAddress").innerText = currentAccount.slice(0,6) + "..." + currentAccount.slice(-4);
-    document.getElementById("connectWallet").disabled = true;
-
-    await fetchData();
-  } catch(e){ 
-    console.error(e); 
-    alert("Wallet connect failed: "+(e.message||e)); 
+    setupEventListeners();
   }
 }
 
-// Show / hide loading
-function showLoading(show = true){
-  document.getElementById("loadingIndicator").style.display = show ? "block" : "none";
+// --- EVENTS ---
+function setupEventListeners() {
+  if (!contractRead) return;
+
+  contractRead.on("Watered", (user, newCount, newStage) => {
+    if (user.toLowerCase() === currentAccount.toLowerCase()) {
+      updateUI(newCount.toString(), Number(newStage));
+    }
+  });
+
+  contractRead.on("Transfer", (from, to, tokenId) => {
+    if (to.toLowerCase() === currentAccount.toLowerCase()) {
+      alert("🎉 NFT Minted! Token ID: " + tokenId);
+    }
+  });
 }
 
-// Fetch data from chain and update UI
-function showStageNotification() {
-  const stage = Number(document.getElementById("stage").innerText);
-  const water = Number(document.getElementById("waterCount").innerText);
-
-  if (stage >= MAX_STAGE && water >= MAX_WATER) {
-    alert("🌱 Plant fully grown! Water refills after 1 hour 💧");
-  }
-}
-
-async function fetchData() {
-  if (!contract || !currentAccount) return;
-
-  const waterCountBN = await contract.getWaterCount(currentAccount);
-  const stageBN = await contract.stageOf(currentAccount);
-
-  const waterCount = Number(waterCountBN.toString());
-  const stage = Number(stageBN);
-
-  document.getElementById("waterCount").innerText = waterCount;
+// --- UI ---
+function updateUI(wc, stage) {
+  document.getElementById("waterCount").innerText = wc;
   document.getElementById("stage").innerText = stage;
 
-  // Update plant visual
   const plant = document.getElementById("plant");
-  plant.className = "";
-  plant.classList.add("plant-stage-" + Math.min(stage, MAX_STAGE));
-
-  const button = document.getElementById("waterButton");
-  const msg = document.getElementById("messageBox");
-
-  // Full plant condition
-  if (stage >= MAX_STAGE && waterCount >= MAX_WATER) {
-    msg.innerText = "💧 Water tank is full. Plant is fully grown!";
-    button.disabled = true;
-    button.innerText = "Plant Fully Hydrated 🌿";
-  } else {
-    msg.innerText = "";
-    button.disabled = false;
-    button.innerText = "I drank water 💧";
-  }
+  plant.className = "plant-stage-" + Math.min(stage, MAX_STAGE);
 }
 
-// Spawn water drops
-function spawnDrops(){
-  const container = document.getElementById("waterDropContainer");
-  for(let i=0;i<3;i++){
-    const drop = document.createElement("div");
-    drop.className = "water-drop";
-    const x = (Math.random()*50)-25;
-    drop.style.left = (30 + x) + "px";
-    const dur = 1.5 + Math.random()*0.6;
-    drop.style.animationDuration = dur + "s";
-    container.appendChild(drop);
-    setTimeout(()=>{ try{ container.removeChild(drop);}catch{} }, Math.round(dur*1000)+120);
-  }
+// --- FETCH ---
+async function fetchData() {
+  ensureProvider();
+
+  const accounts = await provider.listAccounts();
+  if (!accounts.length) return;
+
+  currentAccount = accounts[0];
+
+  const wc = await contractRead.getWaterCount(currentAccount);
+  const stage = await contractRead.stageOf(currentAccount);
+
+  updateUI(wc.toString(), Number(stage));
 }
 
-// Confetti particles
-function spawnParticles(){
-  const container = document.getElementById("plantContainer");
-  const colors = ["#ff7a7a","#ffd166","#7afcff","#b39ddb","#86efac"];
-  for(let i=0;i<14;i++){
-    const p = document.createElement("div");
-    p.className = "particle";
-    p.style.background = colors[i % colors.length];
-    const tx = (Math.random()*140 - 70) + "px";
-    p.style.setProperty('--tx', tx);
-    p.style.left = (70 + Math.random()*20 -10) + "px";
-    p.style.bottom = "24px";
-    container.appendChild(p);
-    setTimeout(()=>{ try{ container.removeChild(p);}catch{} }, 900);
-  }
-}
-
-// Water plant
+// --- 🚀 WATER FUNCTION (BUILDER CODE ENABLED) ---
 async function waterPlant() {
-  if (!currentAccount) {
-    alert("Connect wallet first");
-    return;
-  }
-
   try {
-    showLoading(true);
+    await ensureSigner();
 
-    const tx = await contract.water();
-    await tx.wait();
+    spawnDrops();
 
-    await fetchData();
-    showStageNotification();
+    const walletClient = window.viem.createWalletClient({
+      chain: window.baseChain,
+      transport: window.viem.custom(window.ethereum),
+      dataSuffix: window.Attribution.toDataSuffix({
+        codes: [BUILDER_CODE],
+      }),
+    });
 
-    // if fully grown, spawn particles
-    const stage = Number(document.getElementById("stage").innerText);
-    const water = Number(document.getElementById("waterCount").innerText);
-    if(stage >= MAX_STAGE && water >= MAX_WATER){
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: HydrationPlantABI,
+      functionName: "water",
+      account: currentAccount,
+    });
+
+    console.log("tx:", hash);
+
+    const receipt = await provider.waitForTransaction(hash);
+
+    if (receipt.status === 0) {
+      alert("Transaction failed");
+      return;
+    }
+
+    const newWC = await contractRead.getWaterCount(currentAccount);
+    const newStage = await contractRead.stageOf(currentAccount);
+
+    updateUI(newWC.toString(), Number(newStage));
+
+    if (Number(newStage) >= MAX_STAGE) {
       spawnParticles();
     }
 
   } catch (err) {
     console.error(err);
-    alert("Transaction failed");
-  } finally {
-    showLoading(false);
+    alert(err.message);
   }
 }
 
-// Init on load
-window.addEventListener("load", ()=>{
-  const plantContainer = document.getElementById("plantContainer");
-  const bloom = document.createElement("div");
-  bloom.className = "bloom";
-  bloom.innerHTML = '<div class="petal p1"></div><div class="petal p2"></div><div class="center"></div>';
-  plantContainer.appendChild(bloom);
+// --- VISUALS ---
+function spawnDrops() {
+  const container = document.getElementById("waterDropContainer");
+  for (let i = 0; i < 3; i++) {
+    const drop = document.createElement("div");
+    drop.className = "water-drop";
+    container.appendChild(drop);
+    setTimeout(() => container.removeChild(drop), 1200);
+  }
+}
 
-  document.getElementById("connectWallet").addEventListener("click", connectWallet);
-  document.getElementById("waterButton").addEventListener("click", waterPlant);
+function spawnParticles() {
+  const container = document.getElementById("plantContainer");
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    container.appendChild(p);
+    setTimeout(() => container.removeChild(p), 900);
+  }
+}
+
+// --- INIT ---
+window.addEventListener("load", async () => {
+  ensureProvider();
+
+  document.getElementById("connectWallet").onclick = async () => {
+    await ensureSigner();
+    document.getElementById("walletAddress").innerText =
+      currentAccount.slice(0,6) + "..." + currentAccount.slice(-4);
+    await fetchData();
+  };
+
+  document.getElementById("waterButton").onclick = waterPlant;
+
+  await fetchData();
 });
