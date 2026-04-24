@@ -1,5 +1,5 @@
 // =========================
-// Hydration Plant Mini App (FINAL FIXED WITH BUILDER CODE)
+// Hydration Plant Mini App (BASE OFFICIAL FIX)
 // =========================
 
 // ------------------------
@@ -9,30 +9,12 @@ const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
 const BUILDER_CODE = "bc_gfrlgx8t";
 
 // ------------------------
-// ABI (Ethers for read + encoding)
+// ABI (Ethers read only)
 // ------------------------
 const HydrationPlantABI = [
-  {
-    name: "water",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [],
-    outputs: []
-  },
-  {
-    name: "getWaterCount",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "user", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }]
-  },
-  {
-    name: "stageOf",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "user", type: "address" }],
-    outputs: [{ name: "", type: "uint8" }]
-  }
+  "function water()",
+  "function getWaterCount(address) view returns (uint256)",
+  "function stageOf(address) view returns (uint8)"
 ];
 
 // ------------------------
@@ -52,7 +34,7 @@ const MAX_WATER = 12;
 // ------------------------
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("Install MetaMask");
+    alert("MetaMask required");
     throw new Error("No wallet");
   }
 
@@ -112,6 +94,7 @@ async function fetchData() {
 // ------------------------
 function spawnDrops() {
   const c = document.getElementById("waterDropContainer");
+
   for (let i = 0; i < 3; i++) {
     const d = document.createElement("div");
     d.className = "water-drop";
@@ -120,8 +103,19 @@ function spawnDrops() {
   }
 }
 
+function spawnParticles() {
+  const c = document.getElementById("plantContainer");
+
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    c.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
+
 // ------------------------
-// 🔥 FIXED WATER FUNCTION (BUILDER CODE WORKS HERE)
+// 🚀 WATER FUNCTION (OFFICIAL BASE ATTRIBUTION FIX)
 // ------------------------
 async function waterPlant() {
   if (!currentAccount) {
@@ -138,12 +132,17 @@ async function waterPlant() {
       params: [{ chainId: "0x2105" }],
     });
 
-    // import viem
+    // ------------------------
+    // IMPORT VIEM
+    // ------------------------
     const { createWalletClient, custom, encodeFunctionData } =
       await import("https://esm.sh/viem@2.45.0");
     const { base } =
       await import("https://esm.sh/viem@2.45.0/chains");
 
+    // ------------------------
+    // OFFICIAL SAFE BUILDER ENCODING (NO MANUAL HEX)
+    // ------------------------
     const walletClient = createWalletClient({
       chain: base,
       transport: custom(window.ethereum),
@@ -151,26 +150,34 @@ async function waterPlant() {
 
     const [address] = await walletClient.getAddresses();
 
-    // encode function call
     const data = encodeFunctionData({
-      abi: HydrationPlantABI,
+      abi: [
+        {
+          name: "water",
+          type: "function",
+          stateMutability: "nonpayable",
+          inputs: [],
+          outputs: [],
+        },
+      ],
       functionName: "water",
     });
 
     // ------------------------
-    // 🚀 THIS IS WHERE BUILDER CODE IS INCLUDED
+    // IMPORTANT: USE dataSuffix PROPERLY (BASE EXPECTED FORMAT)
     // ------------------------
-    const builderSuffix =
-      "0x" +
-      Array.from(BUILDER_CODE)
-        .map(c => c.charCodeAt(0).toString(16))
-        .join("");
+    const dataSuffix = {
+      codes: [BUILDER_CODE],
+    };
 
+    // ------------------------
+    // SEND TRANSACTION (BASE COMPLIANT PATH)
+    // ------------------------
     const hash = await walletClient.sendTransaction({
       account: address,
       to: CONTRACT_ADDRESS,
       data,
-      dataSuffix: builderSuffix,
+      dataSuffix,
     });
 
     console.log("TX:", hash);
@@ -189,19 +196,6 @@ async function waterPlant() {
   } catch (err) {
     console.error("TX ERROR:", err);
     alert(err.shortMessage || err.message || "Transaction failed");
-  }
-}
-
-// ------------------------
-// PARTICLES
-// ------------------------
-function spawnParticles() {
-  const c = document.getElementById("plantContainer");
-  for (let i = 0; i < 10; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
-    c.appendChild(p);
-    setTimeout(() => p.remove(), 900);
   }
 }
 
