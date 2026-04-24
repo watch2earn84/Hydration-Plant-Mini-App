@@ -1,6 +1,11 @@
 // =========================
-// script.js (FINAL VERSION)
+// FINAL script.js
 // =========================
+
+// --- IMPORTS (CDN, NO npm needed) ---
+import { createWalletClient, custom } from "https://esm.sh/viem@2.45.0";
+import { base } from "https://esm.sh/viem@2.45.0/chains";
+import { Attribution } from "https://esm.sh/ox@0.1.0/erc8021";
 
 // --- CONFIG ---
 const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
@@ -86,17 +91,17 @@ async function fetchData() {
   updateUI(wc.toString(), Number(stage));
 }
 
-// --- 🚀 WATER FUNCTION (BUILDER CODE ENABLED) ---
+// --- 🚀 WATER FUNCTION (FINAL FIXED) ---
 async function waterPlant() {
   try {
     await ensureSigner();
 
     spawnDrops();
 
-    const walletClient = window.viem.createWalletClient({
-      chain: window.baseChain,
-      transport: window.viem.custom(window.ethereum),
-      dataSuffix: window.Attribution.toDataSuffix({
+    const walletClient = createWalletClient({
+      chain: base,
+      transport: custom(window.ethereum),
+      dataSuffix: Attribution.toDataSuffix({
         codes: [BUILDER_CODE],
       }),
     });
@@ -135,6 +140,8 @@ async function waterPlant() {
 // --- VISUALS ---
 function spawnDrops() {
   const container = document.getElementById("waterDropContainer");
+  if (!container) return;
+
   for (let i = 0; i < 3; i++) {
     const drop = document.createElement("div");
     drop.className = "water-drop";
@@ -145,6 +152,8 @@ function spawnDrops() {
 
 function spawnParticles() {
   const container = document.getElementById("plantContainer");
+  if (!container) return;
+
   for (let i = 0; i < 10; i++) {
     const p = document.createElement("div");
     p.className = "particle";
