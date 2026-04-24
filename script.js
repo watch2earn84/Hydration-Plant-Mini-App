@@ -1,5 +1,5 @@
 // =========================
-// Hydration Plant Mini App (FINAL STABLE)
+// Hydration Plant Mini App (FINAL FIXED WORKING VERSION)
 // =========================
 
 // ------------------------
@@ -9,16 +9,42 @@ const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
 const BUILDER_CODE = "bc_gfrlgx8t";
 
 // ------------------------
-// ABI (simple + safe)
+// VIEM-COMPATIBLE ABI (FIXED)
 // ------------------------
 const HydrationPlantABI = [
-  "function water()",
-  "function getWaterCount(address) view returns (uint256)",
-  "function stageOf(address) view returns (uint8)"
+  {
+    name: "water",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: []
+  },
+  {
+    name: "getWaterCount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "user", type: "address" }
+    ],
+    outputs: [
+      { name: "", type: "uint256" }
+    ]
+  },
+  {
+    name: "stageOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "user", type: "address" }
+    ],
+    outputs: [
+      { name: "", type: "uint8" }
+    ]
+  }
 ];
 
 // ------------------------
-// GLOBALS (Ethers for read)
+// GLOBALS (Ethers for read only)
 // ------------------------
 let provider;
 let signer;
@@ -34,7 +60,7 @@ const MAX_WATER = 12;
 // ------------------------
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("MetaMask not found");
+    alert("MetaMask not found!");
     throw new Error("No wallet");
   }
 
@@ -117,7 +143,7 @@ function spawnParticles() {
 }
 
 // ------------------------
-// 🚀 WATER FUNCTION (FINAL FIXED)
+// 🚀 WATER FUNCTION (FULL FIXED)
 // ------------------------
 async function waterPlant() {
   if (!currentAccount) {
@@ -128,34 +154,24 @@ async function waterPlant() {
   try {
     spawnDrops();
 
-    // 🔥 Force Base network
+    // Force Base chain
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: "0x2105" }],
     });
 
     // ------------------------
-    // Viem dynamic import (SAFE)
+    // Load Viem dynamically
     // ------------------------
     const { createWalletClient, custom } = await import("https://esm.sh/viem@2.45.0");
     const { base } = await import("https://esm.sh/viem@2.45.0/chains");
 
     // ------------------------
-    // SAFE Builder Code encoding (NO external libs)
-    // ------------------------
-    const builderSuffix =
-      "0x" +
-      Array.from(BUILDER_CODE)
-        .map(c => c.charCodeAt(0).toString(16))
-        .join("");
-
-    // ------------------------
-    // Wallet client
+    // Build wallet client
     // ------------------------
     const walletClient = createWalletClient({
       chain: base,
       transport: custom(window.ethereum),
-      dataSuffix: builderSuffix,
     });
 
     const [address] = await walletClient.getAddresses();
@@ -172,9 +188,7 @@ async function waterPlant() {
 
     console.log("TX HASH:", hash);
 
-    // ------------------------
-    // Wait confirmation (Ethers read)
-    // ------------------------
+    // Wait confirmation via ethers
     const receipt = await provider.waitForTransaction(hash);
 
     if (receipt.status === 0) {
