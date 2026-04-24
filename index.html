@@ -7,19 +7,8 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Ethers -->
+  <!-- Ethers (for reads) -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-  <!-- Viem + Builder Code (IMPORTANT) -->
-  <script type="module">
-    import * as viem from "https://esm.sh/viem@2.45.0";
-    import { base } from "https://esm.sh/viem@2.45.0/chains";
-    import { Attribution } from "https://esm.sh/ox@0.1.0/erc8021";
-
-    window.viem = viem;
-    window.baseChain = base;
-    window.Attribution = Attribution;
-  </script>
 </head>
 
 <body>
@@ -42,6 +31,7 @@
     <button id="waterButton">I drank water 💧</button>
   </div>
 
+  <!-- IMPORTANT: module script -->
   <script type="module" src="./script.js"></script>
 </body>
 </html>
