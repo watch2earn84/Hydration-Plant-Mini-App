@@ -1,5 +1,5 @@
 // =========================
-// Hydration Plant Mini App (FINAL STABLE FIX)
+// Hydration Plant Mini App (STABLE FINAL VERSION)
 // =========================
 
 // ------------------------
@@ -30,12 +30,12 @@ const MAX_STAGE = 4;
 const MAX_WATER = 12;
 
 // ------------------------
-// PROVIDER
+// INIT PROVIDER
 // ------------------------
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("MetaMask not found");
-    throw new Error("No wallet");
+    alert("MetaMask not detected");
+    throw new Error("No wallet found");
   }
 
   if (!provider) {
@@ -48,16 +48,34 @@ function ensureProvider() {
 }
 
 // ------------------------
-// CONNECT WALLET
+// CONNECT WALLET (FIXED - GUARANTEED POPUP)
 // ------------------------
 async function connectWallet() {
   try {
+    console.log("Connect clicked...");
+
+    if (!window.ethereum) {
+      alert("Please install MetaMask");
+      return;
+    }
+
     ensureProvider();
 
-    await provider.send("eth_requestAccounts", []);
-    signer = provider.getSigner();
-    currentAccount = await signer.getAddress();
+    // ✔ DIRECT MetaMask call (MOST RELIABLE)
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
 
+    console.log("Accounts:", accounts);
+
+    if (!accounts || accounts.length === 0) {
+      alert("No wallet account found");
+      return;
+    }
+
+    currentAccount = accounts[0];
+
+    signer = provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, HydrationPlantABI, signer);
 
     document.getElementById("walletAddress").innerText =
@@ -68,8 +86,8 @@ async function connectWallet() {
     await fetchData();
 
   } catch (err) {
-    console.error(err);
-    alert("Wallet connection failed: " + err.message);
+    console.error("CONNECT ERROR:", err);
+    alert(err.message || "Wallet connection failed");
   }
 }
 
@@ -77,16 +95,21 @@ async function connectWallet() {
 // FETCH DATA
 // ------------------------
 async function fetchData() {
-  if (!contractRead || !currentAccount) return;
+  try {
+    if (!contractRead || !currentAccount) return;
 
-  const wc = await contractRead.getWaterCount(currentAccount);
-  const st = await contractRead.stageOf(currentAccount);
+    const wc = await contractRead.getWaterCount(currentAccount);
+    const st = await contractRead.stageOf(currentAccount);
 
-  document.getElementById("waterCount").innerText = wc.toString();
-  document.getElementById("stage").innerText = st.toString();
+    document.getElementById("waterCount").innerText = wc.toString();
+    document.getElementById("stage").innerText = st.toString();
 
-  document.getElementById("plant").className =
-    "plant-stage-" + Math.min(Number(st), MAX_STAGE);
+    document.getElementById("plant").className =
+      "plant-stage-" + Math.min(Number(st), MAX_STAGE);
+
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
+  }
 }
 
 // ------------------------
@@ -94,6 +117,8 @@ async function fetchData() {
 // ------------------------
 function spawnDrops() {
   const c = document.getElementById("waterDropContainer");
+
+  if (!c) return;
 
   for (let i = 0; i < 3; i++) {
     const d = document.createElement("div");
@@ -115,19 +140,7 @@ function spawnParticles() {
 }
 
 // ------------------------
-// 🔥 SAFE BUILDER ENCODING (NO viem dataSuffix OBJECT)
-// ------------------------
-function encodeBuilderCode(code) {
-  return (
-    "0x" +
-    Array.from(code)
-      .map(c => c.charCodeAt(0).toString(16))
-      .join("")
-  );
-}
-
-// ------------------------
-// 🚀 WATER FUNCTION (FIXED FOR VIEM ERROR)
+// WATER FUNCTION (SAFE + SIMPLE)
 // ------------------------
 async function waterPlant() {
   if (!currentAccount) {
@@ -138,54 +151,10 @@ async function waterPlant() {
   try {
     spawnDrops();
 
-    // switch Base chain
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0x2105" }],
-    });
+    const tx = await contract.water();
+    console.log("TX SENT:", tx.hash);
 
-    // import viem safely
-    const { createWalletClient, custom, encodeFunctionData } =
-      await import("https://esm.sh/viem@2.45.0");
-    const { base } =
-      await import("https://esm.sh/viem@2.45.0/chains");
-
-    const walletClient = createWalletClient({
-      chain: base,
-      transport: custom(window.ethereum),
-    });
-
-    const [address] = await walletClient.getAddresses();
-
-    // encode function call
-    const data = encodeFunctionData({
-      abi: [
-        {
-          name: "water",
-          type: "function",
-          stateMutability: "nonpayable",
-          inputs: [],
-          outputs: [],
-        },
-      ],
-      functionName: "water",
-    });
-
-    // ✔ FIXED: builder code as STRING (NO OBJECTS)
-    const dataSuffix = encodeBuilderCode(BUILDER_CODE);
-
-    // send transaction
-    const hash = await walletClient.sendTransaction({
-      account: address,
-      to: CONTRACT_ADDRESS,
-      data,
-      dataSuffix,
-    });
-
-    console.log("TX:", hash);
-
-    // wait confirmation
-    await provider.waitForTransaction(hash);
+    await tx.wait();
 
     await fetchData();
 
@@ -197,8 +166,8 @@ async function waterPlant() {
     }
 
   } catch (err) {
-    console.error("TX ERROR:", err);
-    alert(err.shortMessage || err.message || "Transaction failed");
+    console.error("WATER ERROR:", err);
+    alert(err.reason || err.message || "Transaction failed");
   }
 }
 
@@ -206,6 +175,8 @@ async function waterPlant() {
 // INIT
 // ------------------------
 window.addEventListener("load", () => {
+  console.log("App loaded");
+
   document.getElementById("connectWallet").onclick = connectWallet;
   document.getElementById("waterButton").onclick = waterPlant;
 });
