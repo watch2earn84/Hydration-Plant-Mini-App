@@ -7,21 +7,19 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Ethers (for reads) -->
+  <!-- Ethers (read only) -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 
 <body>
-  <div id="app" class="container">
-    <h1>Hydration Plant Mini App</h1>
+  <div class="container">
+    <h1>Hydration Plant 💧</h1>
 
-    <div id="walletDiv">
-      <button id="connectWallet">Connect Wallet</button>
-      <span id="walletAddress"></span>
-    </div>
+    <button id="connectWallet">Connect Wallet</button>
+    <div id="walletAddress"></div>
 
-    <div>Water Count: <span id="waterCount">0</span></div>
-    <div>Stage: <span id="stage">0</span></div>
+    <p>Water Count: <span id="waterCount">0</span></p>
+    <p>Stage: <span id="stage">0</span></p>
 
     <div id="plantContainer">
       <div id="plant" class="plant-stage-0"></div>
@@ -31,7 +29,6 @@
     <button id="waterButton">I drank water 💧</button>
   </div>
 
-  <!-- IMPORTANT: module script -->
   <script type="module" src="./script.js"></script>
 </body>
 </html>
