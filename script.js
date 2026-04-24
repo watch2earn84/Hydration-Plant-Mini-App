@@ -1,5 +1,5 @@
 // =========================
-// Hydration Plant Mini App (FINAL STABLE VERSION)
+// Hydration Plant Mini App (FINAL STABLE)
 // =========================
 
 // ------------------------
@@ -9,7 +9,7 @@ const CONTRACT_ADDRESS = "0x1C7faa92C11b6187eca199F57380A402a1e65814";
 const BUILDER_CODE = "bc_gfrlgx8t";
 
 // ------------------------
-// ABI
+// ABI (simple + safe)
 // ------------------------
 const HydrationPlantABI = [
   "function water()",
@@ -18,7 +18,7 @@ const HydrationPlantABI = [
 ];
 
 // ------------------------
-// GLOBALS (Ethers - read only)
+// GLOBALS (Ethers for read)
 // ------------------------
 let provider;
 let signer;
@@ -34,8 +34,8 @@ const MAX_WATER = 12;
 // ------------------------
 function ensureProvider() {
   if (!window.ethereum) {
-    alert("Please install MetaMask");
-    throw new Error("No wallet found");
+    alert("MetaMask not found");
+    throw new Error("No wallet");
   }
 
   if (!provider) {
@@ -90,7 +90,7 @@ async function fetchData() {
 }
 
 // ------------------------
-// UI EFFECTS
+// VISUAL EFFECTS
 // ------------------------
 function spawnDrops() {
   const container = document.getElementById("waterDropContainer");
@@ -99,6 +99,7 @@ function spawnDrops() {
     const drop = document.createElement("div");
     drop.className = "water-drop";
     container.appendChild(drop);
+
     setTimeout(() => drop.remove(), 1000);
   }
 }
@@ -110,12 +111,13 @@ function spawnParticles() {
     const p = document.createElement("div");
     p.className = "particle";
     container.appendChild(p);
+
     setTimeout(() => p.remove(), 900);
   }
 }
 
 // ------------------------
-// 🚀 WATER FUNCTION (FIXED + BUILDER CODE)
+// 🚀 WATER FUNCTION (FINAL FIXED)
 // ------------------------
 async function waterPlant() {
   if (!currentAccount) {
@@ -126,29 +128,41 @@ async function waterPlant() {
   try {
     spawnDrops();
 
-    // 1. FORCE BASE CHAIN
+    // 🔥 Force Base network
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0x2105" }], // Base mainnet
+      params: [{ chainId: "0x2105" }],
     });
 
-    // 2. Load Viem dynamically (safe browser usage)
+    // ------------------------
+    // Viem dynamic import (SAFE)
+    // ------------------------
     const { createWalletClient, custom } = await import("https://esm.sh/viem@2.45.0");
     const { base } = await import("https://esm.sh/viem@2.45.0/chains");
-    const { Attribution } = await import("https://esm.sh/ox@0.1.0/erc8021");
 
-    // 3. Create wallet client with Builder Code
+    // ------------------------
+    // SAFE Builder Code encoding (NO external libs)
+    // ------------------------
+    const builderSuffix =
+      "0x" +
+      Array.from(BUILDER_CODE)
+        .map(c => c.charCodeAt(0).toString(16))
+        .join("");
+
+    // ------------------------
+    // Wallet client
+    // ------------------------
     const walletClient = createWalletClient({
       chain: base,
       transport: custom(window.ethereum),
-      dataSuffix: Attribution.toDataSuffix({
-        codes: [BUILDER_CODE],
-      }),
+      dataSuffix: builderSuffix,
     });
 
     const [address] = await walletClient.getAddresses();
 
-    // 4. Send transaction
+    // ------------------------
+    // Send transaction
+    // ------------------------
     const hash = await walletClient.writeContract({
       address: CONTRACT_ADDRESS,
       abi: HydrationPlantABI,
@@ -158,14 +172,15 @@ async function waterPlant() {
 
     console.log("TX HASH:", hash);
 
-    // 5. Wait confirmation (Ethers read-only provider)
+    // ------------------------
+    // Wait confirmation (Ethers read)
+    // ------------------------
     const receipt = await provider.waitForTransaction(hash);
 
     if (receipt.status === 0) {
       throw new Error("Transaction reverted");
     }
 
-    // 6. Refresh UI
     await fetchData();
 
     const stage = Number(document.getElementById("stage").innerText);
@@ -176,7 +191,7 @@ async function waterPlant() {
     }
 
   } catch (err) {
-    console.error("WATER ERROR:", err);
+    console.error("TX ERROR:", err);
     alert(err.shortMessage || err.message || "Transaction failed");
   }
 }
